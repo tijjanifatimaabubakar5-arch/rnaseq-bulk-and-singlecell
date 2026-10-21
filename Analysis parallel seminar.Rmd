@@ -1,0 +1,128 @@
+---
+title: "Seminar presentation"
+author: "Abubakar Fatima Tijjani"
+date: "2026-10-15"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: united
+    highlight: pygments
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "C:/Users/tijja/Documents/R programming/Rsubread")
+```
+
+## Part 1
+
+### Question 1
+
+This is the R Markdown template that should be used for assignment 1. Remember
+to provide explanations in text as is done here, and supply comments in the R
+code. All code should go into code chunks like the one below. It is highly
+recommended that you knit the document to HTML before submitting, to make sure
+that it works and gives the correct results to each question.
+
+```{r Q1 code}
+setwd("C:/Users/tijja/Documents/R programming/Rsubread")
+library(Rsubread)
+library(limma)
+library(DESeq2)
+options(digits=2)
+list.files("C:/Users/tijja/Documents/R programming/Rsubread")
+targets <- readTargets(file="target.txt")
+targets
+dir.create("index")
+dir.create("BAM")
+buildindex(basename="index/chrX_melanogaster",reference="DM_chrX.fa.gz",gappedIndex = TRUE) 
+align(index="index/chrX_melanogaster",readfile1=targets$InputFile,input_format="FASTQ",output_format="BAM",output_file=targets$OutputFile,sortReadsByCoordinates=TRUE)
+propmapped(targets$OutputFile)
+subjunc(index="index/chrX_melanogaster",readfile1=targets$InputFile,input_format="FASTQ",output_format="BAM",output_file=targets$OutputFile,
+sortReadsByCoordinates=TRUE)
+propmapped(targets$OutputFile)
+fc <- featureCounts(files=targets$OutputFile,annot.ext="DM_chr.gtf.gz",
+isGTFAnnotationFile=TRUE)
+count2=fc$counts # Extract the counts 
+head(count2) # Print only the first 6 columns 
+anot=fc$annotation
+head(anot)
+count3=data.frame(anot$Length,count2)
+colnames(count3)=c("width","Sample1","Sample2","Sample3","Sample4","Sample5",
+"Sample6", "Sample7") 
+head(count3, 7)
+counts=count3[rowSums(count3[,-1])>=10,][,-1] 
+dim(counts)
+write.table(counts,"counts.csv")
+countsF=read.table("counts.csv")
+counts
+top <- counts[order(rowSums(counts), decreasing = TRUE), ]
+genes <- rownames(top)[1:7]
+genes
+counts[genes, ]
+```
+
+### Question 2
+
+
+
+```{r Q2 code}
+library(DESeq2)
+treat=factor(c("KO","WT","WT","KO","KO","KO","KO"),levels=c("WT","KO"))
+sampleinfo=data.frame(sampleName=colnames(counts),group=treat)
+sampleinfo                      # check each sample has the right group
+ddsMat <- DESeqDataSetFromMatrix(countData = counts,colData = sampleinfo,design = ~ group)
+dds2 <- DESeq(ddsMat)
+sizeFactors(dds2)               # normalization factors, for the slide
+res <- results(dds2)
+summary(res)
+DEGs=data.frame(res[which(res$padj<0.05),])
+print(DEGs,digits=2)
+sampleinfo
+```
+
+### Question 3
+
+
+
+```{r Q3 code}
+library(TxDb.Dmelanogaster.UCSC.dm6.ensGene)
+TxDb = TxDb.Dmelanogaster.UCSC.dm6.ensGene
+genes(TxDb, filter=list(gene_id="FBgn0030328"))
+exons(TxDb, filter=list(gene_id="FBgn0030328"))
+
+```
+
+## Part 2
+
+### Question 4
+
+
+
+```{r Q4 code}
+library(Seurat)
+library(dplyr)
+library(clustree)
+library(ggplot2)
+list.files()
+pbmc = readRDS("sc_dataset1.rds")
+pbmc
+pbmc <- ScaleData(pbmc)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(pbmc))
+pbmc <- FindNeighbors(pbmc, dims = 1:10)
+pbmc <- FindClusters(pbmc, resolution = 0.3)
+pbmc <- RunUMAP(pbmc, dims = 1:10)
+DimPlot(pbmc, reduction = "umap", label = TRUE)
+FeaturePlot(pbmc, features = c("CD19", "CD3E", "CD14"))
+```
+
+
+
+```{r Q7 code, fig.align='center', out.width='768'}
+new.ids <- c("0: T cells", "1: T cells", "2: Monocytes", "3: B cells")
+names(new.ids) <- levels(pbmc)
+pbmc <- RenameIdents(pbmc, new.ids)
+DimPlot(pbmc, reduction = "umap", label = TRUE, label.size = 5, repel = TRUE) + NoLegend()
+```
+

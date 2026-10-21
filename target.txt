@@ -1,0 +1,8 @@
+Sample	InputFile	OutputFile
+KO	Sample1_KO_s.fastq	BAM/Sample1_KO.bam
+WT	Sample2_WT_s.fastq	BAM/Sample2_WT.bam
+WT	Sample3_WT_s.fastq	BAM/Sample3_WT.bam
+KO	Sample4_KO_s.fastq	BAM/Sample4_KO.bam
+KO	Sample5_KO_s.fastq	BAM/Sample5_KO.bam
+KO	Sample6_KO_s.fastq	BAM/Sample6_KO.bam
+KO	Sample7_KO_s.fastq	BAM/Sample7_KO.bam
